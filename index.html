@@ -116,26 +116,28 @@ async function initPlayer(){
 
   try{
 
-    // FETCH CHANNEL FROM API
-    const res = await fetch(
-      "https://speedverse.playsportsapi.workers.dev/?id=" + encodeURIComponent(id)
-    );
+    // FETCH FULL CHANNEL LIST FROM NEW API
+    const res = await fetch("https://speedverse.playsportsapi.workers.dev/");
+    const streams = await res.json();
 
-    const stream = await res.json();
+    // Find matching stream by id
+    const stream = streams.find(s => s.id === id);
 
-    if(!stream.url){
+    if(!stream || !stream.url){
       document.getElementById('llbl').textContent = "STREAM NOT FOUND";
       return;
     }
 
-    // DRM CLEARKEY CONFIG
-    player.configure({
-      drm:{
-        clearKeys:{
-          [stream.k1]: stream.k2
+    // DRM CLEARKEY CONFIG (only if keys exist)
+    if(stream.k1 && stream.k2){
+      player.configure({
+        drm:{
+          clearKeys:{
+            [stream.k1]: stream.k2
+          }
         }
-      }
-    });
+      });
+    }
 
     // LOAD STREAM
     await player.load(stream.url);
